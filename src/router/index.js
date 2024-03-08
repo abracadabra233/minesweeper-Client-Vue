@@ -1,5 +1,5 @@
 // router/index.js
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import GameOverPage from "../components/GameOverPage.vue";
 import GamePage from "../components/GamePage.vue";
 import HomePage from "../components/HomePage.vue";
@@ -7,7 +7,7 @@ import WaitingRoom from "../components/WaitingRoom.vue";
 
 // 创建并导出路由器实例
 const router = createRouter({
-  history: createWebHistory(), // 使用 HTML5 History 模式
+  history: createWebHashHistory(), // 使用 HTML5 History 模式
   routes: [
     { path: "/", component: HomePage, name: "home", props: true },
     { path: "/GamePage", component: GamePage, name: "GamePage", props: true },

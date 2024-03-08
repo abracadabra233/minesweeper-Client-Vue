@@ -2,7 +2,9 @@
   "name": "vue-client",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
+    "deploy": "cd dist && git init && git add . && git commit -m 'deploy' && git remote add origin git@github.com:abracadabra233/minesweeper-Client-Vue.git && git push -u origin main:gh-pages --force",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"

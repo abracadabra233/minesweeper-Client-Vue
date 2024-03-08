@@ -73,7 +73,11 @@ export default createStore({
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
           resolve(state.ws);
         } else {
-          const ws = new WebSocket("ws://127.0.0.1:3000/ws");
+          // const ws = new WebSocket("ws://127.0.0.1:3000/ws");
+          // const ws = new WebSocket("ws://23.225.191.9:10071/ws");
+          // const ws = new WebSocket("ws://free.idcfengye.com:10071/ws");
+          const ws = new WebSocket("ws://abracadabra.free.idcfengye.com/ws");
+          // const ws = new WebSocket("tcp://free.idcfengye.com:10071");
           ws.close = () => {
             console.log("WebSocket断开");
           };
