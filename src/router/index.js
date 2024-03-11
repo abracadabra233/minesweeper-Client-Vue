@@ -8,6 +8,7 @@ import WaitingRoom from "../components/WaitingRoom.vue";
 // 创建并导出路由器实例
 const router = createRouter({
   history: createWebHashHistory(), // 使用 HTML5 History 模式
+  // history: createWebHistory(),
   routes: [
     { path: "/", component: HomePage, name: "home", props: true },
     { path: "/GamePage", component: GamePage, name: "GamePage", props: true },
