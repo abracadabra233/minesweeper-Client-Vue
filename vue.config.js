@@ -1,12 +1,12 @@
-import { defineConfig } from "@vue/cli-service";
-export default defineConfig({
+const { defineConfig } =  require("@vue/cli-service");
+module.exports=defineConfig({
   transpileDependencies: true,
   devServer: {
     port: 15436,
     allowedHosts: "all",
     proxy: {
       "^/ws": {
-        target: "ws://127.0.0.1:15437",
+        target: "ws://localhost:15437",
         ws: true,
         changeOrigin: true,
       },

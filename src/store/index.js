@@ -1,3 +1,5 @@
+import { adventurerNeutral } from '@dicebear/collection';
+import { createAvatar } from '@dicebear/core';
 import { createStore } from "vuex";
 
 function generateRandomId() {
@@ -21,7 +23,9 @@ export default createStore({
       player: {
         id: generateRandomId(),
         name: generateRandomName(),
-        icon: "👤",
+        icon: createAvatar(adventurerNeutral, {
+          seed: generateRandomId(),
+        }).toString(),
       },
       gameConfig: null,
       gameBoard: [],
@@ -52,6 +56,7 @@ export default createStore({
           a_mines: 0,
         }))
       );
+      console.log('游戏开始', state.gameBoard );
     },
     updateCellStatus(state, { x, y, status }) {
       console.log(`Updating cell at (${x}, ${y}): ${status}`);
@@ -73,7 +78,7 @@ export default createStore({
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
           resolve(state.ws);
         } else {
-          const ws = new WebSocket("ws://127.0.0.1:15436/ws");
+          const ws = new WebSocket("ws://localhost:15436/ws");
           ws.close = () => {
             console.log("WebSocket断开");
           };
@@ -106,14 +111,17 @@ export default createStore({
                 commit("setGameConfig", data.config);
                 break;
               case "GameOpRes":
-                if (data.op_res.Success) {
-                  data.op_res.Success.cells.forEach(({ x, y, status }) => {
+                if (data.op_res.Ok) {
+                  console.log("handleGameops Ok",data.op_res.Ok.cells);
+                  data.op_res.Ok.cells.forEach(({ x, y, status }) => {
                     commit("updateCellStatus", { x, y, status });
                   });
-                } else if (data.op_res.GameOver) {
+                } else if (data.op_res.Over) {
+                  console.log("WebSocket连接成功");
                   alert("handleGameOver");
                   break;
-                } else if (data.op_res.GameWon) {
+                } else if (data.op_res.Win) {
+                  console.log("WebSocket连接成功");
                   alert("handleGameWon");
                   break;
                 }
