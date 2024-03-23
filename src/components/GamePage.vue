@@ -1,48 +1,71 @@
 <template>
-  <div class="container">
-    <div class="game-board">
-      <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="board-row">
-        <div v-for="(cell, colIndex) in row" :key="colIndex" class="cell"
-          :class="{ 'closed': cell.status === 'Closed', 'flagged': cell.status === 'Flagged', 'opened': cell.status === 'Opened' }"
-          :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
-          v-on="cell.status !== 'Opened' || cell.a_mines !== 0 ? { click: ($event) => handleCellClick($event, rowIndex, colIndex), contextmenu: ($event) => handleCellClick($event, rowIndex, colIndex) } : {}">
-          <template v-if="cell.status === 'Opened'">
-            {{ cell.a_mines > 0 ? cell.a_mines : '' }}
-          </template>
-          <template v-else-if="cell.status === 'Flagged'">
-            🚩
-          </template>
+  <div class="container-fluid p-3">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="d-flex justify-content-between">
+          <div class="flag-counter">
+            🚩 {{ flagCount }}
+          </div>
+          <div class="timer">
+            ⏱ {{ timePassed }}
+          </div>
+        </div>
+        <div class="game-board d-flex flex-wrap" style="gap: 2px;">
+          <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="d-flex flex-nowrap">
+            <div v-for="(cell, colIndex) in row" :key="colIndex"
+              class="cell d-flex justify-content-center align-items-center"
+              :class="{ 'bg-secondary': cell.status === 'Closed', 'bg-warning': cell.status === 'Flagged', 'bg-light': cell.status === 'Opened' }"
+              :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
+              @click="handleCellClick($event, rowIndex, colIndex)"
+              @contextmenu.prevent="handleCellClick($event, rowIndex, colIndex)">
+              <template v-if="cell.status === 'Opened'">
+                {{ cell.a_mines > 0 ? cell.a_mines : '' }}
+              </template>
+              <template v-else-if="cell.status === 'Flagged'">
+                🚩
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-primary mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#gameControls"
+          aria-expanded="false" aria-controls="gameControls">
+          控制面板
+        </button>
+        <div class="collapse" id="gameControls">
+          <div class="card card-body">
+            <button class="btn btn-info" @click="changeDifficulty">改变难度</button>
+            <button class="btn btn-success" @click="restartGame">再来一局</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-<!-- @click="($event) => handleCellClick($event, rowIndex, colIndex)"
-          @contextmenu.prevent="($event) => handleCellClick($event, rowIndex, colIndex)" -->
+
+
 <script>
 import { mapState } from "vuex";
 
 export default {
-  computed: {
-    ...mapState(["ws", "roomInfo", "gameBoard", "gameConfig"]),
-  },
+  computed: { ...mapState("websocket", ["roomInfo", "gameBoard"]) },
   methods: {
     handleCellClick(e, rowIndex, colIndex) {
       e.preventDefault();
       const flag = e.type === "contextmenu" || e.button === 2;
-      console.log("send GAction", rowIndex, colIndex, flag);
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({
-          type: "GAction",
-          action: { x: rowIndex, y: colIndex, f: flag },
-        }));
-      }
+      const message = {
+        type: "PlayerOperation",
+        action: { x: rowIndex, y: colIndex, f: flag },
+      };
+      console.log(`Send message | ${message.type} | ${message}`);
+      this.$store.dispatch("sendMessage", message);
     },
   },
 };
 </script>
 
-
+<!-- 
 <style scoped>
 .container {
   display: flex;
@@ -159,4 +182,22 @@ export default {
 }
 
 /* 深红色 */
+</style> -->
+
+<style scoped>
+.game-board {
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.cell {
+  width: 40px;
+  /* 根据实际需要调整大小 */
+  height: 40px;
+  /* 保持宽高一致以形成正方形 */
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 你可以根据需要添加更多自定义样式，但尽量利用Bootstrap的样式 */
 </style>

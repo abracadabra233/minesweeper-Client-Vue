@@ -1,4 +1,8 @@
 // main.js
+import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/js/bootstrap.bundle.min';
+
+
 import { createApp } from "vue";
 import App from "@/App.vue";
 import store from "@/store"; // 确保导入了store

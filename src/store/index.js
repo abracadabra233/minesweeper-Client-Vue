@@ -10,7 +10,8 @@ export default createStore({
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
           resolve();
         } else {
-          const url = "ws://localhost:15437/ws";
+          // const url = "ws://localhost:15437/ws";
+          const url = "ws://10.9.54.60:15437/ws";
           const ws = new WebSocket(url);
           ws.onopen = () => {
             console.log("WebSocket connection established, setWebSocketConnection");
@@ -24,6 +25,7 @@ export default createStore({
           ws.onmessage = (event) => {
             const message = JSON.parse(event.data);
             if (message && message.type) {
+              console.log(`Recv message | ${message.type} |`, message);
               this.dispatch(`websocket/${message.type}`, message);
             }
           };
@@ -36,6 +38,7 @@ export default createStore({
       });
     },
     sendMessage({ dispatch, state }, message) {
+      console.log(`Send message | ${message.type} |`, message);
       dispatch('initWebSocket').then(() => {
         state.ws.send(JSON.stringify(message));
       }).catch(error => {

@@ -48,6 +48,9 @@ export default {
             if (state.roomInfo.players[player_id]) {
                 state.roomInfo.players[player_id].is_ready = is_ready;
             }
+            if (player_id === state.curPlayer.id) {
+                state.curPlayer.is_ready = is_ready;
+            }
         },
         GameStart(state, { config }) {
             state.gameConfig = config;
