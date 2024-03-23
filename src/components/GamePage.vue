@@ -1,14 +1,13 @@
 <template>
   <div class="container">
     <div class="game-board">
-      <div v-for="(row, rowIndex) in  gameBoard " :key="rowIndex" class="board-row">
-        <div v-for="(cell, colIndex) in  row " :key="colIndex" class="cell"
-          :class="{ closed: cell.status === 'Closed', flagged: cell.status === 'Flagged', opened: cell.status === 'Opened' }"
+      <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="board-row">
+        <div v-for="(cell, colIndex) in row" :key="colIndex" class="cell"
+          :class="{ 'closed': cell.status === 'Closed', 'flagged': cell.status === 'Flagged', 'opened': cell.status === 'Opened' }"
           :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
-          @click="($event) => handleCellClick($event, rowIndex, colIndex)"
-          @touchstart="(event) => handleTouchStart(event, row, colIndex)" @touchend="handleTouchEnd">
+          v-on="cell.status !== 'Opened' || cell.a_mines !== 0 ? { click: ($event) => handleCellClick($event, rowIndex, colIndex), contextmenu: ($event) => handleCellClick($event, rowIndex, colIndex) } : {}">
           <template v-if="cell.status === 'Opened'">
-            {{ cell.a_mines > 0 ? cell.a_mines : "" }}
+            {{ cell.a_mines > 0 ? cell.a_mines : '' }}
           </template>
           <template v-else-if="cell.status === 'Flagged'">
             🚩
@@ -18,7 +17,8 @@
     </div>
   </div>
 </template>
-<!-- @touchmove="handleTouchMove" @contextmenu.prevent="($event) => handleCellClick($event, rowIndex, colIndex)" -->
+<!-- @click="($event) => handleCellClick($event, rowIndex, colIndex)"
+          @contextmenu.prevent="($event) => handleCellClick($event, rowIndex, colIndex)" -->
 <script>
 import { mapState } from "vuex";
 
@@ -26,63 +26,22 @@ export default {
   computed: {
     ...mapState(["ws", "roomInfo", "gameBoard", "gameConfig"]),
   },
-  data() {
-    return {
-      pressTimer: null,
-      touchStartX: 0,
-      touchStartY: 0,
-      mineColors: [
-        "", // index 0, 不使用
-        "blue", // 1个雷
-        "green", // 2个雷
-        "red", // 3个雷
-      ],
-    };
-  },
   methods: {
-    handleCellClick(e, x, y) {
+    handleCellClick(e, rowIndex, colIndex) {
       e.preventDefault();
-      let flag = false;
-      if (e.type === "contextmenu" || e.button === 2) {
-        flag = true;
-      }
-      console.log("send GAction", x, y, flag);
+      const flag = e.type === "contextmenu" || e.button === 2;
+      console.log("send GAction", rowIndex, colIndex, flag);
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(
-          JSON.stringify({
-            type: "GAction",
-            action: { x, y, f: flag },
-          })
-        );
-      }
-    },
-    handleTouchStart(event, x, y) {
-      if (event.touches.length === 1) {
-        this.touchStartX = event.touches[0].clientX;
-        this.touchStartY = event.touches[0].clientY;
-        this.pressTimer = setTimeout(
-          () => this.handleCellAction(x, y, true),
-          800
-        ); // Trigger flag action on long press
-      }
-    },
-    handleTouchEnd() {
-      clearTimeout(this.pressTimer);
-      this.pressTimer = null;
-    },
-    handleTouchMove(event) {
-      // Cancel the long press action if the finger moves
-      if (
-        Math.abs(event.touches[0].clientX - this.touchStartX) > 10 ||
-        Math.abs(event.touches[0].clientY - this.touchStartY) > 10
-      ) {
-        clearTimeout(this.pressTimer);
-        this.pressTimer = null;
+        this.ws.send(JSON.stringify({
+          type: "GAction",
+          action: { x: rowIndex, y: colIndex, f: flag },
+        }));
       }
     },
   },
 };
 </script>
+
 
 <style scoped>
 .container {
@@ -90,94 +49,57 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  /* 视窗高度 */
   width: 100vw;
-  /* 视窗宽度 */
   overflow: hidden;
-  /* 防止溢出 */
 }
 
 .game-board {
-  display: grid;
-  max-width: 80vw;
-  /* 最大宽度为视窗宽度的 80% */
-  max-height: 80vh;
-  /* 最大高度为视窗高度的 80% */
-  width: auto;
-  /* 宽度自适应内容 */
-  height: auto;
-  /* 高度自适应内容 */
-  margin: auto;
-  /* 居中 game-board */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  width: 80vw;
+  height: 80vh;
   overflow: auto;
-  /* 超出内容时显示滚动条 */
-  grid-template-columns: 1fr;
-  /* grid-template-columns: repeat(auto-fit, minmax(30px, 1fr)); */
-  /* 动态定义列数，使其填满可用空间，且每个 cell 最小宽度为 30px */
-  gap: 2px;
-  /* 单元格之间的间隙 */
 }
 
 .board-row {
   display: flex;
-  /* 使用flex布局使得.row内的元素可以水平排列 */
   width: 100%;
-  /* 确保.row占满父容器的宽度 */
+  justify-content: center;
 }
-
 
 .cell {
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: inset 0 0 5px #ddd;
+  box-shadow: inset 0 0 5px #e6cdcd;
   transition: all 0.3s ease;
   user-select: none;
-  min-width: 30px;
-  /* 单元格最小宽度为 30px */
-  min-height: 30px;
-  /* 单元格最小高度为 30px */
+  width: 30px;
+  /* 定宽保持布局整齐 */
+  height: 30px;
+  /* 定高保持布局整齐 */
+  margin: 1px;
+  /* 略微分隔单元格 */
 }
 
-/* 省略了 .cell 伪元素和其他样式 */
-
-.cell::after {
-  content: '';
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* 在这个伪元素上应用你所有的内容和样式 */
-}
-
-.cell::before {
-  content: '';
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Your styles for the content go here */
-}
 
 /* 鼠标悬停时的效果 */
-.cell:hover {
-  box-shadow: inset 0 0 7px #bbb;
+.cell:hover:not(data-mine="0") {
+  box-shadow: inset 0 0 7px #f7eeee;
 }
 
 /* 默认状态（Closed） */
 .cell.closed {
-  background: linear-gradient(to bottom right, #f9f9f9, #e0e0e0);
+  background: linear-gradient(to bottom right, #f7f1f1, #f7eeeefe);
   /* 线性渐变背景 */
 }
 
 /* 插旗状态（Flagged） */
 .cell.flagged {
-  background: linear-gradient(to bottom right, #f9f9f9, #e0e0e0);
+  background: linear-gradient(to bottom right, #f7f1f1, #f8eeee);
   /* 线性渐变背景 */
   content: "🚩";
   font-size: 18px;
@@ -192,36 +114,49 @@ export default {
   font-weight: bold;
 }
 
-/* 根据不同的数字显示不同的背景色 */
+.cell[data-mine="0"] {
+  background-color: #ffffff;
+  cursor: default;
+}
+
 .cell[data-mine="1"] {
-  background-color: #e0f8e0;
+  background-color: #7ff19b;
 }
 
+/* 浅绿色 */
 .cell[data-mine="2"] {
-  background-color: #d0f0c0;
+  background-color: #57dacf;
 }
 
+/* 深绿色 */
 .cell[data-mine="3"] {
-  background-color: #c0e8a0;
+  background-color: #e5cc8d;
 }
 
+/* 浅黄色 */
 .cell[data-mine="4"] {
-  background-color: #b0e090;
+  background-color: #f4a261;
 }
 
+/* 橙色 */
 .cell[data-mine="5"] {
-  background-color: #a0d880;
+  background-color: #e76f51;
 }
 
+/* 粉红色 */
 .cell[data-mine="6"] {
-  background-color: #90d070;
+  background-color: #9b5de5;
 }
 
+/* 紫色 */
 .cell[data-mine="7"] {
-  background-color: #80c860;
+  background-color: #f15bb5;
 }
 
+/* 红色 */
 .cell[data-mine="8"] {
-  background-color: #70c050;
+  background-color: #d00000;
 }
+
+/* 深红色 */
 </style>

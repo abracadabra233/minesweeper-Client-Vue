@@ -3,89 +3,52 @@
     <button @click="createRoom" class="button create">创建房间</button>
     <button @click="joinRoom" class="button join">加入房间</button>
   </div>
-  <RoomConfigModal v-if="showModal" @close="showModal = false" @select="handleConfigSelected" />
+  <RoomConfigModal v-if="showModal" @close="toggleModal(false)" @select="handleRoomCreation" />
 </template>
 
 <script>
 import RoomConfigModal from "@/components/RoomConfigModal.vue";
 import { mapState } from "vuex";
 export default {
-  components: {
-    RoomConfigModal
-  },
-  data() {
-    return {
-      showModal: false,
-    };
-  },
-  computed: {
-    ...mapState(["roomInfo"]),
-  },
+  data() { return { showModal: false }; },
+  components: { RoomConfigModal },
+  computed: { ...mapState("websocket", ["gameStatus", "curPlayer"]) },
   watch: {
-    roomInfo(newVal) {
-      if (newVal.room_id && newVal.players !== undefined) {
-        this.$router.push({
-          name: "WaitingRoom"
-        });
+    gameStatus(newVal) {
+      if (newVal == "Waiting") {
+        this.$router.push({ name: "WaitingRoom" });
       }
     },
   },
   methods: {
-    createRoom() {
-      this.showModal = true;
+    toggleModal(state) { this.showModal = state; },
+    createRoom() { this.toggleModal(true); },
+    handleRoomCreation(config) {
+      const requestBody = {
+        type: "RoomCreate",
+        player: this.curPlayer,
+        config: config,
+      };
+      console.log("Creating room with:", requestBody);
+      this.$store.dispatch("sendMessage", requestBody);
+      this.toggleModal(false);
     },
-    handleConfigSelected(config) {
-      console.log("createRoom", config);
-      this.$store
-        .dispatch("initWebSocket")
-        .then((ws) => {
-          const player = this.$store.state.player;
-          ws.send(
-            JSON.stringify({
-              type: "InitRoom",
-              player: player,
-              config: config,
-            })
-          );
-        })
-        .catch((error) => {
-          console.error("WebSocket连接失败", error);
-          // 处理连接失败的情况
-        });
-      this.showModal = false;
-    },
+
     joinRoom() {
-      this.$store
-        .dispatch("initWebSocket")
-        .then((ws) => {
-          let roomId = prompt("请输入房间ID", "66666");
-          const player = this.$store.state.player;
-          ws.send(
-            JSON.stringify({
-              type: "JoinRoom",
-              room_id: roomId,
-              player: player,
-            })
-          );
-        })
-        .catch((error) => {
-          console.error("WebSocket连接失败", error);
-          // 处理连接失败的情况
-        });
+      const roomId = prompt("请输入房间ID", "66666");
+      if (roomId) {
+        const requestBody = {
+          type: "RoomJoin",
+          room_id: roomId,
+          player: this.$store.state.player,
+        };
+        console.log("Joining room with:", requestBody);
+        this.$store.dispatch("sendMessage", requestBody);
+      }
     },
   },
-  // setup() {
-  //   onBeforeUnmount(() => {
-  //     // 页面卸载前关闭WebSocket连接
-  //     if (this.$store.state.ws) {
-  //       this.$store.state.ws.close();
-  //     }
-  //   });
-  // },
-
 };
 </script>
-
 
 <style>
 .button-container {
@@ -118,7 +81,7 @@ export default {
 }
 
 .create {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -127,7 +90,7 @@ export default {
 }
 
 .join {
-  background-color: #008CBA;
+  background-color: #008cba;
   color: white;
 }
 

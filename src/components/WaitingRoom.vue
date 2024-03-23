@@ -1,10 +1,11 @@
 <template>
   <div class="waiting-room">
-    <h2>{{ roomTitle }} {{ ellipsis }} </h2>
+    <h2>{{ roomTitle }} {{ ellipsis }}</h2>
     <div class="player-list-container">
       <ul class="player-list">
-        <li v-for="player in roomInfo.players" :key="player.id" class="player-item">
-          <img :src="svgStringToBlobUrl(player.icon)" alt="player icon" class="player-icon" /> {{ player.name }}
+        <li v-for="([id, player]) in Object.entries(roomInfo.players)" :key="id" class="player-item">
+          <img :src="svgStringToBlobUrl(player.icon)" alt="player icon" class="player-icon" />
+          {{ player.name }}
         </li>
       </ul>
     </div>
@@ -12,43 +13,34 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 
 export default {
   methods: {
     svgStringToBlobUrl(svgString) {
-      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const blob = new Blob([svgString], { type: "image/svg+xml" });
       return URL.createObjectURL(blob);
     },
   },
-  data() {
-    return {
-      ellipsis: '',
-    };
-  },
+  data() { return { ellipsis: "", }; },
   created() {
-    // 设置动态省略号效果
     let count = 0;
     this.interval = setInterval(() => {
-      this.ellipsis = '.'.repeat(count % 4);
+      this.ellipsis = ".".repeat(count % 4);
       count++;
     }, 500);
   },
-  beforeUnmount() {
-    // 清除间隔以避免内存泄露
-    clearInterval(this.interval);
-  },
+  beforeUnmount() { clearInterval(this.interval); },
   computed: {
-    ...mapState(['roomInfo']),
-    ...mapState(['gameConfig', 'gameBoard']),
+    ...mapState("websocket", ["roomInfo", 'gameStatus']),
     roomTitle() {
       return `${this.roomInfo.room_id}, Waiting players`;
-    }
+    },
   },
   watch: {
-    'gameBoard'(newConfig) {
-      if (newConfig) {
-        this.$router.push({ name: 'GamePage' });
+    gameStatus(newVal) {
+      if (newVal == "Gameing") {
+        this.$router.push({ name: "GamePage" });
       }
     },
   },
