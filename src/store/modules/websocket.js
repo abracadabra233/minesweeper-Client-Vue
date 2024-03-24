@@ -65,8 +65,8 @@ export default {
                 let cells = op_res.OpSuccess.cells;
                 cells.forEach(({ x, y, status }) => {
                     const cell = state.gameBoard[x][y];
-                    if (status === "Opened") {
-                        cell.a_mines = status.a_mines;
+                    if (status.Opened) {
+                        cell.a_mines = status.Opened.a_mines;
                         cell.status = "Opened";
                     } else if (status === "Closed" || status === "Flagged") {
                         cell.status = status;
@@ -74,12 +74,12 @@ export default {
                 });
             } else if (op_res.GameOver) {
                 let { all_mines, err_mine } = op_res.GameOver;
-                console.log("GameOver", `${all_mines} ${err_mine}`);
+                console.log("GameOver", all_mines, err_mine);
                 state.gameStatus = "GameOver";
                 alert("handleGameOver");
             } else if (op_res.GameWin) {
                 let { win_info } = op_res.GameWin;
-                console.log("GameWin", `${win_info}`);
+                console.log("GameWin", win_info);
                 state.gameStatus = "GameWin";
                 alert("handleGameWon");
             }

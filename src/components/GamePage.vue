@@ -1,12 +1,12 @@
 <template>
   <div class="container-fluid p-3">
     <div class="row">
-      <div class="col-md-8">
-        <div class="d-flex justify-content-between">
-          <div class="flag-counter">
+      <div class="col-12 col-lg-9">
+        <div class="d-flex justify-content-between mb-2">
+          <div class="badge bg-primary">
             🚩 {{ flagCount }}
           </div>
-          <div class="timer">
+          <div class="badge bg-success">
             ⏱ {{ timePassed }}
           </div>
         </div>
@@ -28,12 +28,12 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <button class="btn btn-primary mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#gameControls"
-          aria-expanded="false" aria-controls="gameControls">
+      <div class="col-12 col-lg-3">
+        <button class="btn btn-primary mt-3 d-lg-none" type="button" data-bs-toggle="collapse"
+          data-bs-target="#gameControls" aria-expanded="false" aria-controls="gameControls">
           控制面板
         </button>
-        <div class="collapse" id="gameControls">
+        <div class="collapse d-lg-block" id="gameControls">
           <div class="card card-body">
             <button class="btn btn-info" @click="changeDifficulty">改变难度</button>
             <button class="btn btn-success" @click="restartGame">再来一局</button>
@@ -43,6 +43,7 @@
     </div>
   </div>
 </template>
+
 
 
 <script>
@@ -58,15 +59,82 @@ export default {
         type: "PlayerOperation",
         action: { x: rowIndex, y: colIndex, f: flag },
       };
-      console.log(`Send message | ${message.type} | ${message}`);
       this.$store.dispatch("sendMessage", message);
     },
   },
 };
 </script>
 
-<!-- 
 <style scoped>
+.game-board {
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.cell {
+  width: 40px;
+  /* 根据你的需求调整 */
+  height: 40px;
+  /* 保持宽高一致 */
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  /* 内部内容的绝对定位 */
+}
+
+.cell-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 响应式隐藏和显示控制面板按钮 */
+@media (max-width: 991.98px) {
+  .control-panel-arrow {
+    display: none;
+    /* 默认隐藏 */
+  }
+}
+
+/* 控制面板显示时的箭头样式 */
+.control-panel-arrow.show {
+  display: block;
+  position: fixed;
+  right: 0;
+  bottom: 50%;
+  /* 调整到合适的位置 */
+  z-index: 1030;
+  /* 确保箭头在游戏板之上 */
+}
+
+/* 旗子和计时器样式 */
+.badge {
+  font-size: 1.2rem;
+  padding: 0.5em 1em;
+}
+
+/* 以下是示例样式，你可以根据需要调整 */
+/* 添加自定义颜色和背景 */
+.bg-secondary {
+  background-color: #6c757d !important;
+  /* 关闭的cell */
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+  /* 标记旗帜的cell */
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+  /* 打开的cell */
+}
+
 .container {
   display: flex;
   justify-content: center;
@@ -182,22 +250,4 @@ export default {
 }
 
 /* 深红色 */
-</style> -->
-
-<style scoped>
-.game-board {
-  max-height: 80vh;
-  overflow: auto;
-}
-
-.cell {
-  width: 40px;
-  /* 根据实际需要调整大小 */
-  height: 40px;
-  /* 保持宽高一致以形成正方形 */
-  cursor: pointer;
-  user-select: none;
-}
-
-/* 你可以根据需要添加更多自定义样式，但尽量利用Bootstrap的样式 */
 </style>

@@ -177,3 +177,23 @@ export default createStore({
 
  让我们使用bootstrap 的组件库来优化这个页面 ，让其有更漂亮的界面，更好交互性，更好兼容性（每个cell任何时候都是正方形），在手机上显示不全时 ，可以上下左右滑动；此外，请通过bootstrap在右边添加一排按钮（通过Collapse）组件实现，包括两个按钮：改变难度，再来一局），在pc端页面足够时 就 展示出来，页面不足时 就 隐藏起来，可以通过一个可滑动的小箭头 划出来；在游戏板的右上方，加一个计时器；左上方，加一个旗子计数器；计数器和计时器在同一行。请保持以下原则，尽可能的少自定义样式，尽可能的多的用bootstrap中的组件，JavaScript最好只用于 游戏逻辑，不要用于设置样式
 
+
+### 设计游戏赢了的界面
+现在游戏胜利后，服务端会广播一个GameWon消息，客户端收到该消息后，应该弹出一个窗口，显示游戏胜利的信息，包括 游戏胜利的玩家信息，以及 游戏胜利的玩家列表，请帮我完善该窗口的实现。GameWon消息的消息如下OpResponse::GameWin。该窗口是一个弹窗，里面包括多行，每行显示一次 游戏胜利后的win_info，主要显示排行（根据时间排序）时间，玩家信息；每一行都可以o点击后向下伸缩 ，显示详细的 id2steps，id2flags等信息以及对应的玩家头像，表示每个玩家分别操作了多少步，标记了多少个雷等等信息；请尽量使用bootstrap 的组件库来实现该窗口，并保持以下原则，尽可能的少自定义样式，尽可能的多的用bootstrap中的组件，JavaScript最好只用于 游戏逻辑，不要用于设置样式。使用Vue3
+
+    #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WinInfo {
+    pub id2steps: HashMap<String, u32>,
+    pub id2flags: HashMap<String, u8>,
+    pub id2opens: HashMap<String, u8>,
+    pub all_times: u64,
+    pub all_steps: usize,
+    pub all_mines: Vec<Point>,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub enum OpResponse {
+    OpSuccess { cells: Vec<CellInfo> }, // 玩家操作后，需要改变的信息
+    GameOver { all_mines: Vec<Point>, err_mine: Point }, // 玩家输了
+    GameWin { win_info: WinInfo },      // 玩家赢了
+}
