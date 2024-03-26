@@ -1,0 +1,65 @@
+.cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2); /* 更柔和的阴影 */
+    transition: transform 0.2s ease, box-shadow 0.3s ease; /* 平滑过渡效果 */
+    user-select: none;
+    width: 30px;
+    height: 30px;
+    margin: 2px; /* 略微增加单元格间距 */
+    border-radius: 3px; /* 轻微的圆角 */
+  }
+  
+  /* 鼠标悬停时的效果 */
+  .cell:hover {
+    transform: scale(1.05); /* 轻微放大 */
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5); /* 高亮阴影 */
+  }
+  
+  /* 默认状态（Closed） */
+  .cell.closed {
+    background: linear-gradient(to bottom right, #9e9e9e, #bdbdbd); /* 更现代的灰色渐变 */
+  }
+  
+  /* 插旗状态（Flagged） */
+  .cell.flagged {
+    background-color: #f5f5f5; /* 更亮的背景色 */
+    content: "🚩";
+    font-size: 20px; /* 调整大小以适应变化 */
+  }
+  
+  /* 打开状态（Opened）- 显示数字 */
+  .cell.opened {
+    color: #212121; /* 更深的文字颜色以增强可读性 */
+    font-weight: bold;
+  }
+  
+  /* 自定义背景色，采用更柔和、更和谐的颜色方案 */
+  .cell[data-mine="0"] { background-color: #fafafa; }
+  .cell[data-mine="1"] { background-color: #c8e6c9; }
+  .cell[data-mine="2"] { background-color: #81c784; }
+  .cell[data-mine="3"] { background-color: #ffcc80; }
+  .cell[data-mine="4"] { background-color: #ffb74d; }
+  .cell[data-mine="5"] { background-color: #ff8a65; }
+  .cell[data-mine="6"] { background-color: #ba68c8; }
+  .cell[data-mine="7"] { background-color: #f06292; }
+  .cell[data-mine="8"] { background-color: #e57373; }
+  
+  /* 新增状态的样式 */
+  .cell.err-flagged { background-color: #e53935; } /* 更鲜艳的红色 */
+  .cell.boom { /* 可以加入特定的样式 */ }
+  .cell.origin-boom { background-color: #d32f2f; } /* 更深的红色 */
+  
+  .cell-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  

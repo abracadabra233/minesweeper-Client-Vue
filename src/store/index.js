@@ -12,6 +12,8 @@ export default createStore({
         } else {
           const url = "ws://localhost:15437/ws";
           // const url = "ws://10.9.54.60:15437/ws";
+          // const url = "wss://lvpy.chailab.cn:33000/mpm";
+          // const url = "ws://10.4.208.55:8003/mpm";
           const ws = new WebSocket(url);
           ws.onopen = () => {
             console.log("WebSocket connection established, setWebSocketConnection");

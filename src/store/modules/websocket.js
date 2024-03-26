@@ -28,6 +28,7 @@ export default {
         gameConfig: null,
         gameBoard: [],
         gameStatus: "None", // Waiting, Gameing, GameOver, GameWin
+        winInfo: null,
     }),
     mutations: {
         JoinSuccess(state, { players, room_id }) {
@@ -73,15 +74,42 @@ export default {
                     }
                 });
             } else if (op_res.GameOver) {
-                let { all_mines, err_mine } = op_res.GameOver;
-                console.log("GameOver", all_mines, err_mine);
+                let { mines, mine } = op_res.GameOver;
+                console.log("GameOver", mines, mine);
                 state.gameStatus = "GameOver";
-                alert("handleGameOver");
+                // 显示所有需要标记为雷的
+                mines.forEach(({ x, y }) => {
+                    const cell = state.gameBoard[x][y];
+                    if (cell.status === "Flagged") {
+                        cell.status = "Cor-Flagged";
+                    } else {
+                        cell.status = "Boom";
+                    }
+                });
+                state.gameBoard[mine.x][mine.y].status = "Origin-Boom";
             } else if (op_res.GameWin) {
-                let { win_info } = op_res.GameWin;
-                console.log("GameWin", win_info);
+                // let { id2steps, id2flags, id2opens, duration, steps, mines, cells } = op_res.GameWin.win_info;
+                let mines = op_res.GameWin.win_info.mines;
+                let cells = op_res.GameWin.win_info.cells;
+                console.log("GameWin", op_res.GameWin.win_info);
                 state.gameStatus = "GameWin";
-                alert("handleGameWon");
+                state.winInfo = op_res.GameWin.win_info;
+                // 显示所有需要打开的
+                cells.forEach(({ x, y, status }) => {
+                    const cell = state.gameBoard[x][y];
+                    if (status.Opened) {
+                        cell.a_mines = status.Opened.a_mines;
+                        cell.status = "Opened";
+                    } else if (status === "Closed" || status === "Flagged") {
+                        cell.status = status;
+                    }
+                });
+                // 显示所有需要标记的
+                mines.forEach(({ x, y }) => {
+                    const cell = state.gameBoard[x][y];
+                    cell.status = "Flagged";
+                });
+                // 排行页面：duration，steps，队伍；展开显示：id2steps, id2flags, id2opens
             }
         },
     },

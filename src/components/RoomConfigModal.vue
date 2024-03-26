@@ -49,7 +49,7 @@ import * as bootstrap from 'bootstrap';
 export default {
   data() {
     return {
-      n_player: 3,
+      n_player: 2,
       modalInstance: null, // 初始化模态框实例的变量
     };
   },

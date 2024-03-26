@@ -181,19 +181,11 @@ export default createStore({
 ### 设计游戏赢了的界面
 现在游戏胜利后，服务端会广播一个GameWon消息，客户端收到该消息后，应该弹出一个窗口，显示游戏胜利的信息，包括 游戏胜利的玩家信息，以及 游戏胜利的玩家列表，请帮我完善该窗口的实现。GameWon消息的消息如下OpResponse::GameWin。该窗口是一个弹窗，里面包括多行，每行显示一次 游戏胜利后的win_info，主要显示排行（根据时间排序）时间，玩家信息；每一行都可以o点击后向下伸缩 ，显示详细的 id2steps，id2flags等信息以及对应的玩家头像，表示每个玩家分别操作了多少步，标记了多少个雷等等信息；请尽量使用bootstrap 的组件库来实现该窗口，并保持以下原则，尽可能的少自定义样式，尽可能的多的用bootstrap中的组件，JavaScript最好只用于 游戏逻辑，不要用于设置样式。使用Vue3
 
-    #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WinInfo {
     pub id2steps: HashMap<String, u32>,
     pub id2flags: HashMap<String, u8>,
     pub id2opens: HashMap<String, u8>,
-    pub all_times: u64,
-    pub all_steps: usize,
-    pub all_mines: Vec<Point>,
+    pub duration: u64,
+    pub steps: usize,
 }
-
-#[derive(Serialize, Debug, Clone)]
-pub enum OpResponse {
-    OpSuccess { cells: Vec<CellInfo> }, // 玩家操作后，需要改变的信息
-    GameOver { all_mines: Vec<Point>, err_mine: Point }, // 玩家输了
-    GameWin { win_info: WinInfo },      // 玩家赢了
-}
+使用bootstrap中的组件结合Vue3 来实现一个展示上述信息的模态框，模态框是一个排行榜页面，每一行显示三个信息：名次，duration,steps;如果点击改行，就会进行伸缩或折叠 显示 id2steps，id2flags，id2opens，每行一个头像，对应step flag 和open

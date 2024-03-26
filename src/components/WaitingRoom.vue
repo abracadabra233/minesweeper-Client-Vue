@@ -37,6 +37,7 @@
 import { mapState } from "vuex";
 
 export default {
+  computed: { ...mapState("websocket", ["roomInfo", "curPlayer", 'gameStatus']) },
   methods: {
     svgStringToBlobUrl(svgString) {
       const blob = new Blob([svgString], { type: "image/svg+xml" });
@@ -51,7 +52,6 @@ export default {
       this.$store.dispatch("sendMessage", message);
     },
   },
-  computed: { ...mapState("websocket", ["roomInfo", "curPlayer", 'gameStatus']) },
   watch: {
     gameStatus(newVal) {
       if (newVal == "Gameing") { this.$router.push({ name: "GamePage" }) }

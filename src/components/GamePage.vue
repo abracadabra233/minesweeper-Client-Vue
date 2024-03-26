@@ -2,7 +2,8 @@
   <div class="container-fluid p-3">
     <div class="row">
       <div class="col-12 col-lg-9">
-        <div class="d-flex justify-content-between mb-2">
+        <!-- 将状态显示区域提到 game-board 外部，并使用 d-flex 和 justify-content-between 来布局 -->
+        <div class="d-flex justify-content-between mb-2 game-status-bar">
           <div class="badge bg-primary">
             🚩 {{ flagCount }}
           </div>
@@ -10,19 +11,24 @@
             ⏱ {{ timePassed }}
           </div>
         </div>
+
         <div class="game-board d-flex flex-wrap" style="gap: 2px;">
           <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="d-flex flex-nowrap">
             <div v-for="(cell, colIndex) in row" :key="colIndex"
               class="cell d-flex justify-content-center align-items-center"
-              :class="{ 'bg-secondary': cell.status === 'Closed', 'bg-warning': cell.status === 'Flagged', 'bg-light': cell.status === 'Opened' }"
+              :class="gameStatus === 'GameOver' && cell.status === 'Flagged' ? 'err-flagged' : cell.status.toLowerCase()"
               :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
-              @click="handleCellClick($event, rowIndex, colIndex)"
-              @contextmenu.prevent="handleCellClick($event, rowIndex, colIndex)">
+              @click="gameStatus === 'Gameing' ? handleCellClick($event, rowIndex, colIndex) : () => { }"
+              @contextmenu.prevent="gameStatus === 'Gameing' ? handleCellClick($event, rowIndex, colIndex) : () => { }">
               <template v-if="cell.status === 'Opened'">
                 {{ cell.a_mines > 0 ? cell.a_mines : '' }}
               </template>
-              <template v-else-if="cell.status === 'Flagged'">
+              <template
+                v-else-if="cell.status === 'Flagged' || cell.status === 'Err-Flagged' || cell.status === 'Cor-Flagged'">
                 🚩
+              </template>
+              <template v-else-if="cell.status === 'Boom' || cell.status === 'Origin-Boom'">
+                💣
               </template>
             </div>
           </div>
@@ -42,24 +48,114 @@
       </div>
     </div>
   </div>
+  <RankingModal ref="rankingModal" />
 </template>
 
 
-
 <script>
+import '@/styles/cell1.css';
 import { mapState } from "vuex";
-
+import RankingModal from "@/components/RankingModal.vue";
 export default {
-  computed: { ...mapState("websocket", ["roomInfo", "gameBoard"]) },
+  components: { RankingModal },
+  computed: { ...mapState("websocket", ["roomInfo", "winInfo", "gameStatus", "gameBoard"]) },
+  watch: {
+    gameStatus(newVal) {
+      // TODO: 游戏结束，整理游戏结束逻辑
+      if (newVal == "GameWin") {
+        let winInfos = [];
+        winInfos.push(this.winInfo);
+        this.$refs.rankingModal.openModal(winInfos);
+      } else if (newVal == "GameOver") {
+        console.log("cannotCellBeClicked");
+      }
+    },
+  },
   methods: {
+    changeDifficulty() {
+      let winInfos = [];
+      const winInfo = { id2steps: {}, id2flags: {}, id2opens: {}, duration: 60, steps: 230 };
+      Object.entries(this.roomInfo.players).forEach(([, player]) => {
+        winInfo.id2steps[player.id] = 10;
+        winInfo.id2flags[player.id] = 3;
+        winInfo.id2opens[player.id] = 80;
+      });
+      winInfos.push(winInfo);
+      this.$refs.rankingModal.openModal(winInfos);
+    },
+
+    restartGame() {
+      this.$refs.rankingModal.openModal();
+    },
+
+    getAdjacentCloseCount(rowIndex, colIndex) {
+      const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+      ];
+      let closeCount = 0;
+
+      directions.forEach(([dx, dy]) => {
+        const newX = rowIndex + dx;
+        const newY = colIndex + dy;
+        if (newX >= 0 && newX < this.gameBoard.length &&
+          newY >= 0 && newY < this.gameBoard[0].length &&
+          this.gameBoard[newX][newY].status === 'Closed') {
+          closeCount++;
+        }
+      });
+      return closeCount;
+    },
+
+    getAdjacentFlagsCount(rowIndex, colIndex) {
+      const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+      ];
+      let flagsCount = 0;
+
+      directions.forEach(([dx, dy]) => {
+        const newX = rowIndex + dx;
+        const newY = colIndex + dy;
+        if (newX >= 0 && newX < this.gameBoard.length &&
+          newY >= 0 && newY < this.gameBoard[0].length &&
+          this.gameBoard[newX][newY].status === 'Flagged') {
+          flagsCount++;
+        }
+      });
+      return flagsCount;
+    },
+
+    canCellBeClicked(rowIndex, colIndex, f) {
+      const status = this.gameBoard[rowIndex][colIndex].status;
+      if (status === 'Opened') {
+        const a_mines = this.gameBoard[rowIndex][colIndex].a_mines;
+        const a_flags = this.getAdjacentFlagsCount(rowIndex, colIndex);
+        const a_close = this.getAdjacentCloseCount(rowIndex, colIndex);
+        return !(a_mines === 0 ||
+          a_mines !== 0 && (a_flags !== a_mines || (a_flags === a_mines && a_close === 0)))
+      } else if (status === 'Closed') {
+        return true
+      } else if (status === 'Flagged') {
+        return !f
+      }
+      return true;
+    },
+
     handleCellClick(e, rowIndex, colIndex) {
       e.preventDefault();
       const flag = e.type === "contextmenu" || e.button === 2;
-      const message = {
-        type: "PlayerOperation",
-        action: { x: rowIndex, y: colIndex, f: flag },
-      };
-      this.$store.dispatch("sendMessage", message);
+      if (this.canCellBeClicked(rowIndex, colIndex, flag)) {
+        const message = {
+          type: "PlayerOperation",
+          action: { x: rowIndex, y: colIndex, f: flag },
+        };
+        this.$store.dispatch("sendMessage", message);
+      } else {
+        console.log("cannotCellBeClicked", rowIndex, colIndex);
+      }
     },
   },
 };
@@ -71,27 +167,6 @@ export default {
   overflow: auto;
 }
 
-.cell {
-  width: 40px;
-  /* 根据你的需求调整 */
-  height: 40px;
-  /* 保持宽高一致 */
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-  /* 内部内容的绝对定位 */
-}
-
-.cell-content {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 /* 响应式隐藏和显示控制面板按钮 */
 @media (max-width: 991.98px) {
@@ -118,23 +193,6 @@ export default {
   padding: 0.5em 1em;
 }
 
-/* 以下是示例样式，你可以根据需要调整 */
-/* 添加自定义颜色和背景 */
-.bg-secondary {
-  background-color: #6c757d !important;
-  /* 关闭的cell */
-}
-
-.bg-warning {
-  background-color: #ffc107 !important;
-  /* 标记旗帜的cell */
-}
-
-.bg-light {
-  background-color: #f8f9fa !important;
-  /* 打开的cell */
-}
-
 .container {
   display: flex;
   justify-content: center;
@@ -159,95 +217,4 @@ export default {
   width: 100%;
   justify-content: center;
 }
-
-.cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: inset 0 0 5px #e6cdcd;
-  transition: all 0.3s ease;
-  user-select: none;
-  width: 30px;
-  /* 定宽保持布局整齐 */
-  height: 30px;
-  /* 定高保持布局整齐 */
-  margin: 1px;
-  /* 略微分隔单元格 */
-}
-
-
-/* 鼠标悬停时的效果 */
-.cell:hover:not(data-mine="0") {
-  box-shadow: inset 0 0 7px #f7eeee;
-}
-
-/* 默认状态（Closed） */
-.cell.closed {
-  background: linear-gradient(to bottom right, #f7f1f1, #f7eeeefe);
-  /* 线性渐变背景 */
-}
-
-/* 插旗状态（Flagged） */
-.cell.flagged {
-  background: linear-gradient(to bottom right, #f7f1f1, #f8eeee);
-  /* 线性渐变背景 */
-  content: "🚩";
-  font-size: 18px;
-  /* 调整旗子大小 */
-}
-
-/* 打开状态（Opened）- 显示数字并根据数字变化背景色 */
-.cell.opened {
-  justify-content: center;
-  align-items: center;
-  color: #333;
-  font-weight: bold;
-}
-
-.cell[data-mine="0"] {
-  background-color: #ffffff;
-  cursor: default;
-}
-
-.cell[data-mine="1"] {
-  background-color: #7ff19b;
-}
-
-/* 浅绿色 */
-.cell[data-mine="2"] {
-  background-color: #57dacf;
-}
-
-/* 深绿色 */
-.cell[data-mine="3"] {
-  background-color: #e5cc8d;
-}
-
-/* 浅黄色 */
-.cell[data-mine="4"] {
-  background-color: #f4a261;
-}
-
-/* 橙色 */
-.cell[data-mine="5"] {
-  background-color: #e76f51;
-}
-
-/* 粉红色 */
-.cell[data-mine="6"] {
-  background-color: #9b5de5;
-}
-
-/* 紫色 */
-.cell[data-mine="7"] {
-  background-color: #f15bb5;
-}
-
-/* 红色 */
-.cell[data-mine="8"] {
-  background-color: #d00000;
-}
-
-/* 深红色 */
 </style>

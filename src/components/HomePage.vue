@@ -28,6 +28,17 @@ export default {
     createRoom() {
       // 使用ref调用RoomConfigModal组件的openModal方法
       this.$refs.roomConfigModal.openModal();
+      // let winInfos = [
+      //   {
+      //     id2steps: { "Alice": 120, "Bob": 110 },
+      //     id2flags: { "Alice": 3, "Bob": 2 },
+      //     id2opens: { "Alice": 80, "Bob": 75 },
+      //     duration: 60,
+      //     steps: 230
+      //   }
+      //   // 可以添加更多的WinInfo对象
+      // ];
+      // this.$refs.rankingModal.openModal(winInfos);
     },
     joinRoom() {
       const roomId = prompt("请输入房间ID", "66666");
