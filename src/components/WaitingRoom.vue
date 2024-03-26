@@ -54,7 +54,7 @@ export default {
   },
   watch: {
     gameStatus(newVal) {
-      if (newVal == "Gameing") { this.$router.push({ name: "GamePage" }) }
+      if (newVal == "Gameing") { this.$router.push({ name: "game" }) }
     },
   },
 };

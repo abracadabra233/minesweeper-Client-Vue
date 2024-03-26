@@ -11,7 +11,7 @@
           <div v-for="(info, index) in winInfos" :key="index" class="card mb-3" @click="toggleDetail(index)">
             <div class="card-body">
               <h5 class="card-title"><strong>#{{ index + 1 }}</strong> Duration: {{ info.duration }}, Steps: {{
-            info.steps }}</h5>
+            info.steps }}, Team: {{ teamName }} </h5>
               <div v-if="showDetails[index]" class="details">
                 <div class="list-group">
                   <div v-for="(_, key) in info.id2steps" :key=key
@@ -47,7 +47,14 @@
 import * as bootstrap from 'bootstrap';
 import { mapState } from "vuex";
 export default {
-  computed: { ...mapState("websocket", ["roomInfo", "curPlayer", 'gameStatus']) },
+  computed: {
+    ...mapState("websocket", ["roomInfo", "curPlayer", 'gameStatus']),
+    teamName() {
+      return Object.values(this.roomInfo.players)
+        .map(player => player.name)
+        .join(' & ');
+    }
+  },
   data() {
     return {
       winInfos: [],

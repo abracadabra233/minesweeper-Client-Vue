@@ -8,7 +8,6 @@
       </div>
     </div>
   </div>
-  <!-- RoomConfigModal组件，使用ref属性引用 -->
   <RoomConfigModal ref="roomConfigModal" @select="handleRoomCreation" />
 </template>
 
@@ -21,7 +20,7 @@ export default {
   computed: { ...mapState("websocket", ["gameStatus", "curPlayer"]) },
   watch: {
     gameStatus(newVal) {
-      if (newVal == "Waiting") { this.$router.push({ name: "WaitingRoom" }) }
+      if (newVal == "Waiting") { this.$router.push({ name: "wait" }) }
     },
   },
   methods: {

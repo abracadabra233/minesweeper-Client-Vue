@@ -61,7 +61,7 @@ export default {
   computed: { ...mapState("websocket", ["roomInfo", "winInfo", "gameStatus", "gameBoard"]) },
   watch: {
     gameStatus(newVal) {
-      // TODO: 游戏结束，整理游戏结束逻辑
+      // TODO: 游戏结束，整理游戏结束逻辑，增加再来一局逻辑
       if (newVal == "GameWin") {
         let winInfos = [];
         winInfos.push(this.winInfo);
