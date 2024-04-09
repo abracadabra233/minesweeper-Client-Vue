@@ -11,15 +11,15 @@
             ⏱ {{ timePassed }}
           </div>
         </div>
-
         <div class="game-board d-flex flex-wrap" style="gap: 2px;">
           <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="d-flex flex-nowrap">
             <div v-for="(cell, colIndex) in row" :key="colIndex"
               class="cell d-flex justify-content-center align-items-center"
               :class="gameStatus === 'GameOver' && cell.status === 'Flagged' ? 'err-flagged' : cell.status.toLowerCase()"
               :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
-              @click="gameStatus === 'Gameing' ? handleCellClick($event, rowIndex, colIndex) : () => { }"
-              @contextmenu.prevent="gameStatus === 'Gameing' ? handleCellClick($event, rowIndex, colIndex) : () => { }">
+              v-longpress="() => gameStatus === 'Gameing' ? handleCellClick(rowIndex, colIndex, true) : () => { }"
+              @click="gameStatus === 'Gameing' ? handleCellClick(rowIndex, colIndex, false) : () => { }"
+              @contextmenu.prevent="gameStatus === 'Gameing' ? handleCellClick(rowIndex, colIndex, true) : () => { }">
               <template v-if="cell.status === 'Opened'">
                 {{ cell.a_mines > 0 ? cell.a_mines : '' }}
               </template>
@@ -51,13 +51,14 @@
   <RankingModal ref="rankingModal" />
 </template>
 
-
 <script>
 import '@/styles/cell1.css';
 import { mapState } from "vuex";
-import RankingModal from "@/components/RankingModal.vue";
+import RankingModal from "@/components/modals/RankingModal.vue";
+import longpressDirective from '@/directives/LongPressDirective.js';
 export default {
   components: { RankingModal },
+  directives: { 'longpress': longpressDirective },
   computed: { ...mapState("websocket", ["roomInfo", "winInfo", "gameStatus", "gameBoard"]) },
   watch: {
     gameStatus(newVal) {
@@ -67,10 +68,11 @@ export default {
         winInfos.push(this.winInfo);
         this.$refs.rankingModal.openModal(winInfos);
       } else if (newVal == "GameOver") {
-        console.log("cannotCellBeClicked");
+        console.log("GameOver");
       }
     },
   },
+  data() { return { touchTimeout: null, } },
   methods: {
     changeDifficulty() {
       let winInfos = [];
@@ -144,15 +146,21 @@ export default {
       return true;
     },
 
-    handleCellClick(e, rowIndex, colIndex) {
-      e.preventDefault();
-      const flag = e.type === "contextmenu" || e.button === 2;
+    handleCellClick(rowIndex, colIndex, flag) {
+      // e.preventDefault();
+      // if (!flag) {
+      //   flag = e.type === "contextmenu" || e.button === 2;
+      // }
+      // const
       if (this.canCellBeClicked(rowIndex, colIndex, flag)) {
         const message = {
           type: "PlayerOperation",
           action: { x: rowIndex, y: colIndex, f: flag },
         };
         this.$store.dispatch("sendMessage", message);
+        if ('vibrate' in navigator && flag) {
+          navigator.vibrate([100]);
+        }
       } else {
         console.log("cannotCellBeClicked", rowIndex, colIndex);
       }
@@ -165,6 +173,14 @@ export default {
 .game-board {
   max-height: 80vh;
   overflow: auto;
+  position: relative;
+}
+
+.game-status-bar {
+  position: relative;
+  /* 允许绝对定位的子元素相对于此定位 */
+  width: 100%;
+  /* 使状态栏宽度与 game-board 一致 */
 }
 
 

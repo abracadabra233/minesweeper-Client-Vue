@@ -1,9 +1,8 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import GamePage from "@/components/GamePage.vue";
 import HomePage from "@/components/HomePage.vue";
-import store from "@/store";
 import WaitingRoom from "@/components/WaitingRoom.vue";
-
+import store from "@/store";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -17,8 +16,8 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (!store.state.ws) {
-    if (to.name !== 'home') {
-      next({ name: 'home' });
+    if (to.name !== "home") {
+      next({ name: "home" });
     } else {
       next();
     }

@@ -13,7 +13,7 @@
 
 
 <script>
-import RoomConfigModal from "@/components/RoomConfigModal.vue";
+import RoomConfigModal from "@/components/modals/RoomConfigModal.vue";
 import { mapState } from "vuex";
 export default {
   components: { RoomConfigModal },

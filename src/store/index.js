@@ -10,10 +10,7 @@ export default createStore({
         if (state.ws && state.ws.readyState === WebSocket.OPEN) {
           resolve();
         } else {
-          const url = "ws://localhost:15437/ws";
-          // const url = "ws://10.9.54.60:15437/ws";
-          // const url = "wss://lvpy.chailab.cn:33000/mpm";
-          // const url = "ws://10.4.208.55:8003/mpm";
+          const url = process.env.VUE_APP_WEBSOCKET_URL;
           const ws = new WebSocket(url);
           ws.onopen = () => {
             console.log("WebSocket connection established, setWebSocketConnection");
