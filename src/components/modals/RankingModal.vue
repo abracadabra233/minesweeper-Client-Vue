@@ -48,7 +48,7 @@ import * as bootstrap from 'bootstrap';
 import { mapState } from "vuex";
 export default {
   computed: {
-    ...mapState("websocket", ["roomInfo", "curPlayer", 'gameStatus']),
+    ...mapState("websocket", ["roomInfo", "curPlayer"]),
     teamName() {
       return Object.values(this.roomInfo.players)
         .map(player => player.name)

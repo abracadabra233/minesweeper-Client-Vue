@@ -1,5 +1,5 @@
 // src/directives/LongPressDirective.js
-export const longpressDirective = {
+const longpressDirective = {
     mounted(el, binding) {
         if (typeof binding.value !== 'function') {
             throw new Error("The expression provided to v-longpress should be a function");
@@ -52,3 +52,5 @@ export const longpressDirective = {
         el.removeEventListener("touchcancel", el._v_longpress_cancel);
     }
 };
+
+export default longpressDirective;

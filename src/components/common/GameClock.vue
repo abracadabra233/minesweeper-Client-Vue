@@ -1,6 +1,6 @@
 <template>
     <div class="badge bg-success">
-        ⏱ {{ timePassed }}
+        ⏱ {{ formatTime(timePassed) }}
     </div>
 </template>
 
@@ -13,8 +13,16 @@ export default {
         };
     },
     methods: {
+        formatTime(timeInSeconds) {
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+            const formattedMinutes = minutes.toString().padStart(2, '0');
+            const formattedSeconds = seconds.toString().padStart(2, '0');
+            return `${formattedMinutes}:${formattedSeconds}`;
+        },
         start() {
             if (this.intervalId) return; // 防止多个定时器同时运行
+            this.timePassed = 0;
             this.intervalId = setInterval(() => {
                 this.timePassed++;
             }, 1000);

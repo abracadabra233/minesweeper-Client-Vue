@@ -5,17 +5,15 @@
         <!-- 将状态显示区域提到 game-board 外部，并使用 d-flex 和 justify-content-between 来布局 -->
         <div class="d-flex justify-content-between mb-2 game-status-bar">
           <div class="badge bg-primary">
-            🚩 {{ flagCount }}
+            🚩 {{ flagCount + ' / ' + gameConfig.mines }}
           </div>
-          <div class="badge bg-success">
-            ⏱ {{ timePassed }}
-          </div>
+          <GameClock ref="gameClockRef" />
         </div>
         <div class="game-board d-flex flex-wrap" style="gap: 2px;">
           <div v-for="(row, rowIndex) in gameBoard" :key="rowIndex" class="d-flex flex-nowrap">
             <div v-for="(cell, colIndex) in row" :key="colIndex"
               class="cell d-flex justify-content-center align-items-center"
-              :class="gameStatus === 'GameOver' && cell.status === 'Flagged' ? 'err-flagged' : cell.status.toLowerCase()"
+              :class="gameEndFalg === 'GameOver' && cell.status === 'Flagged' ? 'err-flagged' : cell.status.toLowerCase()"
               :data-mine="cell.status === 'Opened' ? cell.a_mines : ''"
               v-longpress="() => gameStatus === 'Gameing' ? handleCellClick(rowIndex, colIndex, true) : () => { }"
               @click="gameStatus === 'Gameing' ? handleCellClick(rowIndex, colIndex, false) : () => { }"
@@ -42,6 +40,7 @@
         <div class="collapse d-lg-block" id="gameControls">
           <div class="card card-body">
             <button class="btn btn-info" @click="changeDifficulty">改变难度</button>
+            <button class="btn btn-info" @click="showRanking">排行榜</button>
             <button class="btn btn-success" @click="restartGame">再来一局</button>
           </div>
         </div>
@@ -54,41 +53,44 @@
 <script>
 import '@/styles/cell1.css';
 import { mapState } from "vuex";
+import GameClock from "@/components/common/GameClock.vue";
 import RankingModal from "@/components/modals/RankingModal.vue";
 import longpressDirective from '@/directives/LongPressDirective.js';
 export default {
-  components: { RankingModal },
+  components: { RankingModal, GameClock },
   directives: { 'longpress': longpressDirective },
-  computed: { ...mapState("websocket", ["roomInfo", "winInfo", "gameStatus", "gameBoard"]) },
+  computed: { ...mapState("websocket", ["winInfo", "gameStatus", "gameEndFalg", "flagCount", "gameConfig", "gameBoard"]) },
+  mounted() { this.$refs.gameClockRef.start(); },
   watch: {
-    gameStatus(newVal) {
-      // TODO: 游戏结束，整理游戏结束逻辑，增加再来一局逻辑
+    gameEndFalg(newVal) {
       if (newVal == "GameWin") {
-        let winInfos = [];
-        winInfos.push(this.winInfo);
-        this.$refs.rankingModal.openModal(winInfos);
+        this.$refs.gameClockRef.stop();
+        this.$refs.rankingModal.openModal([this.winInfo]);
       } else if (newVal == "GameOver") {
-        console.log("GameOver");
+        this.$refs.gameClockRef.stop();
+      }
+    },
+    gameStatus(newVal) {
+      if (newVal == "Gameing") {
+        console.log("restart Gameing");
+        this.$refs.gameClockRef.start();
+      }
+      else if (newVal == "Waiting") {
+        console.log("Gameing end set gameStatus to Waiting");
       }
     },
   },
-  data() { return { touchTimeout: null, } },
   methods: {
-    changeDifficulty() {
-      let winInfos = [];
-      const winInfo = { id2steps: {}, id2flags: {}, id2opens: {}, duration: 60, steps: 230 };
-      Object.entries(this.roomInfo.players).forEach(([, player]) => {
-        winInfo.id2steps[player.id] = 10;
-        winInfo.id2flags[player.id] = 3;
-        winInfo.id2opens[player.id] = 80;
-      });
-      winInfos.push(winInfo);
-      this.$refs.rankingModal.openModal(winInfos);
+    changeDifficulty() { },
+    restartGame() {
+      if (this.gameConfig.n_player != 1 && this.gameStatus == "Waiting") {
+        this.$router.push({ name: "wait" })
+      }
+      const message = { type: "GameAgain" };
+      this.$store.dispatch("sendMessage", message);
     },
 
-    restartGame() {
-      this.$refs.rankingModal.openModal();
-    },
+    showRanking() { this.$refs.rankingModal.openModal([this.winInfo]); },
 
     getAdjacentCloseCount(rowIndex, colIndex) {
       const directions = [
@@ -222,7 +224,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: start;
+  justify-content: flex-start;
   width: 80vw;
   height: 80vh;
   overflow: auto;
