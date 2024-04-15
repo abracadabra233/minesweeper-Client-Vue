@@ -16,6 +16,7 @@ module.exports = defineConfig({
     // },
     webSocketServer: false,
   },
+  // cargo tauri build  时需要将publicPath注释；发布到github page需要这个
   publicPath:
     process.env.NODE_ENV === "production" ? "/minesweeper-Client-Vue/" : "/",
 });
