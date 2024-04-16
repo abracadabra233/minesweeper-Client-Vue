@@ -5,7 +5,7 @@
   "scripts": {
     "deploy": "vue-cli-service build && cd dist && git init && git add . && git commit -m 'deploy' && git remote add origin git@github.com:abracadabra233/minesweeper-Client-Vue.git && git push -u origin main:gh-pages --force",
     "serve": "vue-cli-service serve",
-    "build:tauri": "TAURI_BUILD=true vue-cli-service build",
+    "build:tauri": "cross-env TAURI_BUILD=true vue-cli-service build",
     "build:web": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
@@ -26,6 +26,7 @@
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "cross-env": "^7.0.3",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3"
   },
