@@ -5,7 +5,8 @@
   "scripts": {
     "deploy": "vue-cli-service build && cd dist && git init && git add . && git commit -m 'deploy' && git remote add origin git@github.com:abracadabra233/minesweeper-Client-Vue.git && git push -u origin main:gh-pages --force",
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build:tauri": "TAURI_BUILD=true vue-cli-service build",
+    "build:web": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
