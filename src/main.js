@@ -1,15 +1,24 @@
 // main.js
-import "bootstrap/dist/css/bootstrap.min.css";
-import 'bootstrap/dist/js/bootstrap.bundle.min';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from '@/App.vue'
+import router from '@/router'
 
-import { createApp } from "vue";
-import App from "@/App.vue";
-import store from "@/store"; // 确保导入了store
-import router from "@/router"; // 从router/index.js导入路由配置
+// 创建应用实例
+const app = createApp(App)
 
-const app = createApp(App);
+// 使用插件
+app.use(createPinia())
+app.use(router)
 
-app.use(router); // 使用路由
-app.use(store); //
-app.mount("#app"); // 挂载Vue应用
+// 全局错误处理
+app.config.errorHandler = (err, vm, info) => {
+  console.error('Global error:', err)
+  console.error('Error info:', info)
+}
+
+// 挂载应用
+app.mount('#app')

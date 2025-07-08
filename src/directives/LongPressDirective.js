@@ -2,55 +2,86 @@
 const longpressDirective = {
     mounted(el, binding) {
         if (typeof binding.value !== 'function') {
-            throw new Error("The expression provided to v-longpress should be a function");
+            console.warn('v-longpress directive expects a function as value')
+            return
         }
 
-        let pressTimer = null;
+        let pressTimer = null
+        let isPressed = false
+        const longPressDelay = binding.arg || 300 // 默认300ms
 
         const start = (e) => {
-            if (e.type === 'click' && e.button !== 0) {
-                return; // 如果不是鼠标左键点击，则忽略
+            // 只响应鼠标左键或触摸事件
+            if (e.type === 'mousedown' && e.button !== 0) {
+                return
             }
-            if (pressTimer === null) {
+
+            if (pressTimer === null && !isPressed) {
+                isPressed = true
                 pressTimer = setTimeout(() => {
-                    handler(e); // 执行长按之后的操作
-                }, 300); // 设置定时器，500毫秒后执行长按操作
+                    try {
+                        binding.value(e)
+                    } catch (error) {
+                        console.error('Long press handler error:', error)
+                    }
+                }, longPressDelay)
             }
-        };
+        }
 
         const cancel = () => {
             if (pressTimer !== null) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
+                clearTimeout(pressTimer)
+                pressTimer = null
             }
-        };
+            isPressed = false
+        }
 
-        const handler = (e) => {
-            binding.value(e);
-        };
+        // 鼠标事件
+        el.addEventListener('mousedown', start, { passive: false })
+        el.addEventListener('mouseup', cancel, { passive: false })
+        el.addEventListener('mouseleave', cancel, { passive: false })
+        el.addEventListener('click', cancel, { passive: false })
 
-        // 添加事件监听器
-        el.addEventListener("mousedown", start);
-        el.addEventListener("touchstart", start);
-        // 取消长按操作
-        el.addEventListener("click", cancel);
-        el.addEventListener("mouseout", cancel);
-        el.addEventListener("touchend", cancel);
-        el.addEventListener("touchcancel", cancel);
+        // 触摸事件
+        el.addEventListener('touchstart', start, { passive: false })
+        el.addEventListener('touchend', cancel, { passive: false })
+        el.addEventListener('touchcancel', cancel, { passive: false })
 
-        // 保存事件监听器，以便之后卸载
-        el._v_longpress_start = start;
-        el._v_longpress_cancel = cancel;
+        // 防止默认行为（如选择文本）
+        el.addEventListener('selectstart', (e) => e.preventDefault(), { passive: false })
+        el.addEventListener('dragstart', (e) => e.preventDefault(), { passive: false })
+
+        // 保存事件监听器引用，以便之后卸载
+        el._v_longpress_handlers = {
+            start,
+            cancel,
+        }
     },
-    beforeUnmount(el) {
-        // 卸载时清理事件监听器
-        el.removeEventListener("mousedown", el._v_longpress_start);
-        el.removeEventListener("touchstart", el._v_longpress_start);
-        el.removeEventListener("click", el._v_longpress_cancel);
-        el.removeEventListener("mouseout", el._v_longpress_cancel);
-        el.removeEventListener("touchend", el._v_longpress_cancel);
-        el.removeEventListener("touchcancel", el._v_longpress_cancel);
-    }
-};
 
-export default longpressDirective;
+    beforeUnmount(el) {
+        // 清理事件监听器
+        if (el._v_longpress_handlers) {
+            const { start, cancel } = el._v_longpress_handlers
+
+            el.removeEventListener('mousedown', start)
+            el.removeEventListener('mouseup', cancel)
+            el.removeEventListener('mouseleave', cancel)
+            el.removeEventListener('click', cancel)
+
+            el.removeEventListener('touchstart', start)
+            el.removeEventListener('touchend', cancel)
+            el.removeEventListener('touchcancel', cancel)
+
+            delete el._v_longpress_handlers
+        }
+    },
+
+    updated(el, binding) {
+        // 如果绑定值发生变化，更新处理函数
+        if (el._v_longpress_handlers && typeof binding.value === 'function') {
+            // 这里可以添加更新逻辑，如果需要的话
+        }
+    },
+}
+
+export default longpressDirective
