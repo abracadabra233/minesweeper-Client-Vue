@@ -14,7 +14,7 @@
     "format": "prettier --write \"src/**/*.{vue,js,ts,jsx,tsx}\"",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "deploy:localhost": "vite build --mode local && cd dist && git init && git add . && git commit -m 'deploy-local' && git branch -M main",
+    "deploy:aliyun": "rm -rf dist && vite build --mode aliyun && cd dist && git init && git add . && git commit -m 'deploy localhost' && git remote add origin git@gitee.com:abracadabra233/minesweeper-client-vue.git && git push -u origin main:gh-pages --force",
     "deploy:gh-pages": "rm -rf dist && vite build --mode gh-pages && cd dist && git init && git add . && git commit -m 'deploy-gh-pages' && git remote add origin git@github.com:abracadabra233/minesweeper-Client-Vue.git && git push -u origin main:gh-pages --force"
   },
   "dependencies": {
